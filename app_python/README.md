@@ -67,3 +67,21 @@ Response:
 |----------|-------------|---------|
 | HOST | Bind host address | 0.0.0.0 |
 | PORT | Listen port | 5000 |
+
+## Docker
+
+### Build Image
+```bash
+docker build -t devops-info-service-python .
+```
+
+### Run Container
+```bash
+docker run -d -p 5000:5000 --name python-app timofeq1/devops-lab02-python:latest
+```
+
+### Pull from Docker Hub
+```bash
+docker pull timofeq1/devops-lab02-python:latest
+docker run -d -p 5000:5000 timofeq1/devops-lab02-python:latest
+```

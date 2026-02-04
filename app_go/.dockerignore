@@ -1,0 +1,20 @@
+# Binaries and object files
+bin/
+obj/
+*.exe
+*.o
+*.iso
+
+# IDEs
+.vscode/
+.idea/
+
+# Git
+.git
+.gitignore
+.dockerignore
+
+# Docs
+docs/
+README.md
+#go.mod
