@@ -1,5 +1,8 @@
 # DevOps Info Service
 
+[![Python CI](https://github.com/timofeq1/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg)](https://github.com/timofeq1/DevOps-Core-Course/actions/workflows/python-ci.yml)
+[![codecov](https://codecov.io/gh/timofeq1/DevOps-Core-Course/graph/badge.svg?token=CODECOV_TOKEN)](https://codecov.io/gh/timofeq1/DevOps-Core-Course)
+
 ## Overview
 A production-ready Python web service that provides comprehensive system information and health monitoring. Built with FastAPI.
 
@@ -85,3 +88,24 @@ docker run -d -p 5000:5000 --name python-app timofeq1/devops-lab02-python:latest
 docker pull timofeq1/devops-lab02-python:latest
 docker run -d -p 5000:5000 timofeq1/devops-lab02-python:latest
 ```
+
+## Testing
+
+This project uses [pytest](https://docs.pytest.org/) for unit testing.
+
+### Run Tests Locally
+
+1. Install development dependencies:
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+2. Run tests:
+   ```bash
+   pytest
+   ```
+
+3. Run with coverage:
+   ```bash
+   pytest --cov=. --cov-report=term-missing
+   ```

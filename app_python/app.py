@@ -1,10 +1,15 @@
+
+"""
+This module provides a simple FastAPI web application that returns system information
+and uptime details. Ideally suited for DevOps monitoring labs.
+"""
+
 import os
 import socket
 import platform
 import logging
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 
 # Configure logging
 logging.basicConfig(
@@ -47,7 +52,7 @@ async def root(request: Request):
     """
     logger.info("Processing request for /")
     uptime = get_uptime()
-    
+
     return {
         "service": {
             "name": "devops-info-service",
