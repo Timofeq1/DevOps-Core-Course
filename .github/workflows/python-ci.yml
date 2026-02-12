@@ -52,7 +52,6 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./app_python/coverage.xml
       continue-on-error: true
 
     - name: Run Snyk to check for vulnerabilities
@@ -60,7 +59,6 @@ jobs:
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        file: app_python/requirements.txt
         args: --severity-threshold=high
       continue-on-error: true 
 
