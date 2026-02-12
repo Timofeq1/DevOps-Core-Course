@@ -64,10 +64,10 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: timofeq1/devops-lab02-go
+        images: timofeq1/devops-lab03-go
         tags: |
           type=raw,value=latest
-          type=date,format=YYYY.MM.DD
+          type=raw,value={{date 'YYYY.MM.DD'}}
           type=sha,format=long
 
     - name: Build and push

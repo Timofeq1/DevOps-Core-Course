@@ -49,7 +49,7 @@ jobs:
         pytest --cov=. --cov-report=xml
         
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./app_python/coverage.xml
@@ -86,10 +86,10 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: timofeq1/devops-lab02
+        images: timofeq1/devops-lab03-python
         tags: |
           type=raw,value=latest
-          type=date,format=YYYY.MM.DD
+          type=raw,value={{date 'YYYY.MM.DD'}}
           type=sha,format=long
 
     - name: Build and push
