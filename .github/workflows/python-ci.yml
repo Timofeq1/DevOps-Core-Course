@@ -54,12 +54,13 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
       continue-on-error: true
 
+    - name: Install Snyk CLI
+      uses: snyk/actions/setup@master
+
     - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/python@master
+      run: snyk test --severity-threshold=high
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high --file=app_python/requirements.txt
       continue-on-error: true 
 
   docker-build-push:
