@@ -1,7 +1,6 @@
 # DevOps Info Service
 
 [![Python CI](https://github.com/timofeq1/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg)](https://github.com/timofeq1/DevOps-Core-Course/actions/workflows/python-ci.yml)
-[![codecov](https://codecov.io/gh/timofeq1/DevOps-Core-Course/graph/badge.svg?token=CODECOV_TOKEN)](https://codecov.io/gh/timofeq1/DevOps-Core-Course)
 
 ## Overview
 A production-ready Python web service that provides comprehensive system information and health monitoring. Built with FastAPI.

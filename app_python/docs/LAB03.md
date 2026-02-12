@@ -42,7 +42,7 @@ tests/test_app.py ...                                                  [100%]
 ```
 
 **Workflow Status:**
-![Python CI](https://github.com/timofey/devops-lab03/actions/workflows/python-ci.yml/badge.svg)
+[![Python CI](https://github.com/timofeq1/DevOps-Core-Course/actions/workflows/python-ci.yml/badge.svg)](https://github.com/timofeq1/DevOps-Core-Course/actions/workflows/python-ci.yml)
 
 ## 3. Best Practices Implemented
 
@@ -53,7 +53,27 @@ tests/test_app.py ...                                                  [100%]
 5.  **Timeout Limits:** `timeout-minutes` is set to prevent stalled jobs from consuming all compute minutes.
 
 **Snyk Results:**
-Snyk scanning is integrated. If vulnerabilities are found (e.g., in `fastapi` or `uvicorn`), the report details them. Currently set to warn only (`continue-on-error: true`) to ensure lab workflow continuity, but in production, high-severity issues should block deployment.
+Snyk scanning is integrated. If vulnerabilities are found (e.g., in `fastapi` or `uvicorn`), the report details them. Currently set to warn only (`continue-on-error: true`) to ensure lab workflow continuity, but in production, high-severity issues should block deployment. Here is the current result of snyk:
+```text
+Testing /home/runner/work/DevOps-Core-Course/DevOps-Core-Course/app_python...
+
+Tested 12 dependencies for known issues, found 2 issues, 2 vulnerable paths.
+
+Issues to fix by upgrading dependencies:
+  Pin starlette@0.38.6 to starlette@0.49.1 to fix
+  ✗ Regular Expression Denial of Service (ReDoS) [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-STARLETTE-13733964] in starlette@0.38.6
+    introduced by fastapi@0.115.0 > starlette@0.38.6
+  ✗ Allocation of Resources Without Limits or Throttling [High Severity][https://security.snyk.io/vuln/SNYK-PYTHON-STARLETTE-8186175] in starlette@0.38.6
+    introduced by fastapi@0.115.0 > starlette@0.38.6
+Organization:      timofeq1
+Package manager:   pip
+Target file:       requirements.txt
+Project name:      app_python
+Open source:       no
+Project path:      /home/runner/work/DevOps-Core-Course/DevOps-Core-Course/app_python
+Licenses:          enabled
+
+```
 
 ## 4. Key Decisions
 
