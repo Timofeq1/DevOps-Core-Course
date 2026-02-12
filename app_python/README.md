@@ -80,13 +80,13 @@ docker build -t devops-info-service-python .
 
 ### Run Container
 ```bash
-docker run -d -p 5000:5000 --name python-app timofeq1/devops-lab02-python:latest
+docker run -d -p 5000:5000 --name python-app timofeq1/devops-lab03-python:latest
 ```
 
 ### Pull from Docker Hub
 ```bash
-docker pull timofeq1/devops-lab02-python:latest
-docker run -d -p 5000:5000 timofeq1/devops-lab02-python:latest
+docker pull timofeq1/devops-lab03-python:latest
+docker run -d -p 5000:5000 timofeq1/devops-lab03-python:latest
 ```
 
 ## Testing
@@ -94,6 +94,8 @@ docker run -d -p 5000:5000 timofeq1/devops-lab02-python:latest
 This project uses [pytest](https://docs.pytest.org/) for unit testing.
 
 ### Run Tests Locally
+
+> Run these commands using python environment
 
 1. Install development dependencies:
    ```bash
@@ -109,3 +111,16 @@ This project uses [pytest](https://docs.pytest.org/) for unit testing.
    ```bash
    pytest --cov=. --cov-report=term-missing
    ```
+
+Example of output:
+```text
+============================ test session starts =============================
+platform linux -- Python 3.12.3, pytest-8.0.0, pluggy-1.6.0
+rootdir: /home/timofey/Desktop/Study/B3_T2_Spring_2026/DevOps/DevOps-Core-Course/app_python
+plugins: anyio-4.12.1, cov-4.1.0
+collected 3 items                                                            
+
+tests/test_app.py ...                                                  [100%]
+
+============================= 3 passed in 0.37s ==============================
+```

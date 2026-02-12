@@ -24,7 +24,8 @@ Rationale: For a continuously deployed service like this, date-based versioning 
 ## 2. Workflow Evidence
 
 - **Successful Workflow Run:** [Link to GitHub Actions](https://github.com/timofeq1/DevOps-Core-Course/actions)
-- **Docker Hub Image:** [timofeq1/devops-lab02](https://hub.docker.com/r/timofeq1/devops-lab02)
+- **Python Docker Hub Image:** [timofeq1/devops-lab03-python](https://hub.docker.com/r/timofeq1/devops-lab03-python)
+- **Python Docker Hub Image:** [timofeq1/devops-lab03-go](https://hub.docker.com/r/timofeq1/devops-lab03-go)
 
 **Tests Passing Locally:**
 ```text
@@ -63,5 +64,5 @@ Snyk scanning is integrated. If vulnerabilities are found (e.g., in `fastapi` or
 
 ## 5. Challenges
 
--   **Path Context:** Initial manual runs encountered directory context issues (`cd app_python`), resolved by using `defaults.run.working-directory` in GitHub Actions and correct relative paths in local testing.
+-   **Adding Tokens:** It was quite time consuming to find out where and how to add needed tokens for Snyk and Codecov
 -   **Linting:** Pylint found trailing whitespaces and missing docstrings in the provided `app.py`, which were fixed to ensure a clean codebase.
