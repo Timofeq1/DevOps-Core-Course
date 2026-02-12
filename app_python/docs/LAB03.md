@@ -28,15 +28,16 @@ Rationale: For a continuously deployed service like this, date-based versioning 
 
 **Tests Passing Locally:**
 ```text
-============================= test session starts ==============================
+(venv) timofey@lenovoARH7:~/Desktop/Study/B3_T2_Spring_2026/DevOps/DevOps-Core-Course/app_python$ ./venv/bin/pytest 
+============================ test session starts =============================
 platform linux -- Python 3.12.3, pytest-8.0.0, pluggy-1.6.0
 rootdir: /home/timofey/Desktop/Study/B3_T2_Spring_2026/DevOps/DevOps-Core-Course/app_python
 plugins: anyio-4.12.1, cov-4.1.0
-collected 3 items
+collected 3 items                                                            
 
-tests/test_app.py ...                                                    [100%]
+tests/test_app.py ...                                                  [100%]
 
-============================== 3 passed in 0.30s ===============================
+============================= 3 passed in 0.37s ==============================
 ```
 
 **Workflow Status:**
