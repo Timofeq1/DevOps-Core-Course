@@ -1,0 +1,6 @@
+pytest==8.0.0
+httpx==0.26.0
+pytest-cov==4.1.0
+pylint==3.0.3
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
