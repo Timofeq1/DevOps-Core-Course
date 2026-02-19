@@ -1,0 +1,10 @@
+yc_token           = "yc-123"
+yc_cloud_id        = "b13434234u50pob32"
+yc_folder_id       = "b1g8cmb2342342pob"
+zone               = "ru-central1-a"
+ssh_user           = "ubuntu"
+ssh_public_key_path = "~/.ssh/id_ed25519.pub"
+
+project_name = "devops-lab04"
+environment  = "lab"
+owner        = "timofey"

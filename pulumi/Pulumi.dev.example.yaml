@@ -1,0 +1,9 @@
+config:
+  yandex:token: "#TODO_SET_YC_TOKEN"
+  yandex:cloudId: "#TODO_SET_YC_CLOUD_ID"
+  yandex:folderId: "#TODO_SET_YC_FOLDER_ID"
+  yandex:zone: "ru-central1-a"
+  lab04-yandex-vm:sshUser: "ubuntu"
+  lab04-yandex-vm:sshPublicKeyPath: "~/.ssh/id_ed25519.pub"
+  lab04-yandex-vm:subnetCidr: "10.10.0.0/24"
+  lab04-yandex-vm:imageId: "#TODO_SET_IMAGE_ID_FROM_YC_CATALOG"
