@@ -1,0 +1,13 @@
+---
+common_packages:
+  - python3-pip
+  - python3-venv
+  - curl
+  - git
+  - vim
+  - htop
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
+common_timezone: UTC

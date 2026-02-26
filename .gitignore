@@ -26,3 +26,8 @@ yc-key.json
 # Python cache
 __pycache__/
 .pytest_cache/
+
+# Ansible
+*.retry
+.vault_pass
+ansible/inventory/*.pyc

@@ -37,6 +37,12 @@ variable "ssh_public_key_path" {
   type        = string
 }
 
+variable "ssh_allowed_cidrs" {
+  description = "CIDR blocks allowed to connect via SSH"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
 variable "image_family" {
   description = "Image family for VM"
   type        = string

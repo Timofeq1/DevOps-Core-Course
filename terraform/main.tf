@@ -23,6 +23,13 @@ resource "yandex_vpc_security_group" "lab04" {
   network_id = yandex_vpc_network.lab04.id
 
   ingress {
+    description    = "SSH"
+    protocol       = "TCP"
+    port           = 22
+    v4_cidr_blocks = var.ssh_allowed_cidrs
+  }
+
+  ingress {
     description    = "HTTP"
     protocol       = "TCP"
     port           = 80
