@@ -1,0 +1,56 @@
+---
+- name: Include wipe tasks
+  ansible.builtin.include_tasks: wipe.yml
+  tags:
+    - web_app_wipe
+
+- name: Deploy application with Docker Compose
+  block:
+    - name: Ensure Docker service is running
+      ansible.builtin.service:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Create compose project directory
+      ansible.builtin.file:
+        path: "{{ compose_project_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Render docker-compose manifest
+      ansible.builtin.template:
+        src: docker-compose.yml.j2
+        dest: "{{ compose_project_dir }}/docker-compose.yml"
+        mode: "0644"
+
+    - name: Start services via Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: "{{ compose_project_dir }}"
+        state: present
+        pull: "{{ web_app_pull_policy }}"
+        recreate: auto
+        remove_orphans: true
+
+    - name: Wait for application port
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ app_port }}"
+        timeout: "{{ app_healthcheck_timeout }}"
+        delay: "{{ app_healthcheck_delay }}"
+
+    - name: Verify health endpoint
+      ansible.builtin.uri:
+        url: "{{ app_healthcheck_url }}"
+        method: GET
+        status_code: 200
+        return_content: true
+
+  rescue:
+    - name: Explain how to inspect failed compose deployment
+      ansible.builtin.debug:
+        msg: "Deployment failed. Check logs with: docker compose -f {{ compose_project_dir }}/docker-compose.yml logs"
+
+  tags:
+    - app_deploy
+    - compose

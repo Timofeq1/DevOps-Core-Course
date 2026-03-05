@@ -1,54 +1,112 @@
 ---
-- name: Create apt keyrings directory
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: "0755"
+- name: Install Docker engine and dependencies
+  block:
+    - name: Create apt keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
 
-- name: Download Docker GPG key
-  ansible.builtin.get_url:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    dest: "{{ docker_apt_keyring_asc }}"
-    mode: "0644"
-    force: true
+    - name: Download Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: "{{ docker_apt_keyring_asc }}"
+        mode: "0644"
+        force: true
+      register: docker_gpg_key_download
 
-- name: Convert Docker GPG key to apt keyring format
-  ansible.builtin.command:
-    cmd: "gpg --dearmor --yes --output {{ docker_apt_keyring_gpg }} {{ docker_apt_keyring_asc }}"
+    - name: Convert Docker GPG key to apt keyring format  # noqa command-instead-of-module
+      ansible.builtin.command:
+        cmd: "gpg --dearmor --yes --output {{ docker_apt_keyring_gpg }} {{ docker_apt_keyring_asc }}"
+      when: docker_gpg_key_download.changed
+      changed_when: true
 
-- name: Set Docker apt keyring permissions
-  ansible.builtin.file:
-    path: "{{ docker_apt_keyring_gpg }}"
-    mode: "0644"
-    state: file
+    - name: Set Docker apt keyring permissions
+      ansible.builtin.file:
+        path: "{{ docker_apt_keyring_gpg }}"
+        mode: "0644"
+        state: file
 
-- name: Add Docker apt repository
-  ansible.builtin.apt_repository:
-    repo: "{{ docker_apt_repo }}"
-    state: present
-    filename: docker
-  notify: restart docker
+    - name: Add Docker apt repository
+      ansible.builtin.apt_repository:
+        repo: "{{ docker_apt_repo }}"
+        state: present
+        filename: docker
+      notify: restart docker
 
-- name: Install Docker engine packages
-  ansible.builtin.apt:
-    name: "{{ docker_packages }}"
-    state: present
-    update_cache: true
+    - name: Install Docker engine packages
+      ansible.builtin.apt:
+        name: "{{ docker_packages }}"
+        state: present
+        update_cache: true
 
-- name: Ensure Docker service is enabled and running
-  ansible.builtin.service:
-    name: docker
-    enabled: true
-    state: started
+    - name: Install docker Python binding package
+      ansible.builtin.apt:
+        name: "{{ docker_python_package }}"
+        state: present
 
-- name: Add users to docker group
-  ansible.builtin.user:
-    name: "{{ item }}"
-    groups: docker
-    append: true
-  loop: "{{ docker_users }}"
+  rescue:
+    - name: Wait before retrying Docker apt setup
+      ansible.builtin.wait_for:
+        timeout: 10
 
-- name: Install docker Python binding package
-  ansible.builtin.apt:
-    name: "{{ docker_python_package }}"
-    state: present
+    - name: Refresh apt cache before Docker retry
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 0
+
+    - name: Retry Docker GPG key download
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: "{{ docker_apt_keyring_asc }}"
+        mode: "0644"
+        force: true
+      register: docker_gpg_key_download_retry
+
+    - name: Retry Docker GPG conversion  # noqa command-instead-of-module
+      ansible.builtin.command:
+        cmd: "gpg --dearmor --yes --output {{ docker_apt_keyring_gpg }} {{ docker_apt_keyring_asc }}"
+      when: docker_gpg_key_download_retry.changed
+      changed_when: true
+
+    - name: Retry Docker apt repository setup
+      ansible.builtin.apt_repository:
+        repo: "{{ docker_apt_repo }}"
+        state: present
+        filename: docker
+      notify: restart docker
+
+    - name: Retry Docker engine package installation
+      ansible.builtin.apt:
+        name: "{{ docker_packages }}"
+        state: present
+        update_cache: true
+
+    - name: Retry docker Python binding package install
+      ansible.builtin.apt:
+        name: "{{ docker_python_package }}"
+        state: present
+
+  always:
+    - name: Ensure Docker service is enabled and running
+      ansible.builtin.service:
+        name: docker
+        enabled: true
+        state: started
+
+  become: true
+  tags:
+    - docker_install
+
+- name: Configure Docker access
+  block:
+    - name: Add users to docker group
+      ansible.builtin.user:
+        name: "{{ item }}"
+        groups: docker
+        append: true
+      loop: "{{ docker_users }}"
+
+  become: true
+  tags:
+    - docker_config
