@@ -1,1 +1,33 @@
 test
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+terraform.tfvars.json
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Pulumi
+pulumi/venv/
+pulumi/.venv/
+pulumi/Pulumi.*.yaml
+!pulumi/Pulumi.*.example.yaml
+
+# Cloud credentials
+*.sa.json
+yc-key.json
+
+# Python cache
+__pycache__/
+.pytest_cache/
+
+# Ansible
+*.retry
+.vault_pass
+ansible/inventory/*.pyc

@@ -1,0 +1,54 @@
+---
+- name: Install common packages and baseline settings
+  block:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install common packages
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
+
+    - name: Set timezone
+      community.general.timezone:
+        name: "{{ common_timezone }}"
+
+  rescue:
+    - name: Recover apt cache after failure  # noqa command-instead-of-module
+      ansible.builtin.command:
+        cmd: apt-get update --fix-missing
+      changed_when: false
+
+    - name: Retry package installation after apt recovery
+      ansible.builtin.apt:
+        name: "{{ common_packages }}"
+        state: present
+        update_cache: true
+
+  always:
+    - name: Mark common package block completion
+      ansible.builtin.copy:
+        dest: /tmp/common-packages-block.log
+        content: "common packages block completed\n"
+        mode: "0644"
+
+  become: true
+  tags:
+    - packages
+
+- name: Manage baseline users
+  block:
+    - name: Ensure managed users exist
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        shell: "{{ item.shell | default('/bin/bash') }}"
+        create_home: "{{ item.create_home | default(true) }}"
+        groups: "{{ item.groups | default(omit) }}"
+        append: true
+      loop: "{{ common_users }}"
+
+  become: true
+  tags:
+    - users

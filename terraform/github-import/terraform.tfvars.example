@@ -1,0 +1,6 @@
+github_token = "ghp_123456"
+github_owner = "Timofeq1"
+
+repository_name        = "DevOps-Core-Course"
+repository_description = "DevOps Core Course labs managed with Terraform"
+repository_visibility  = "public"

@@ -1,0 +1,21 @@
+---
+# Copy to group_vars/all.yml and encrypt with ansible-vault.
+
+dockerhub_username: your-dockerhub-username
+dockerhub_password: your-dockerhub-access-token
+
+app_name: devops-app
+docker_image: "{{ dockerhub_username }}/devops-info-service"
+docker_tag: latest
+app_port: 8000
+app_internal_port: 5000
+compose_project_dir: "/opt/{{ app_name }}"
+docker_compose_version: "3.8"
+
+app_env:
+  APP_ENV: production
+app_secret_key: change-me
+
+# Wipe controls (double-gated by variable + web_app_wipe tag)
+web_app_wipe: false
+web_app_wipe_remove_images: false
