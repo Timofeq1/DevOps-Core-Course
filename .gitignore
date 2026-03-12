@@ -31,3 +31,6 @@ __pycache__/
 *.retry
 .vault_pass
 ansible/inventory/*.pyc
+
+# Monitoring
+monitoring/.env

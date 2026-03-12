@@ -16,6 +16,36 @@ app_env:
   APP_ENV: production
 app_secret_key: change-me
 
+# Monitoring stack (Lab 07)
+monitoring_stack_name: monitoring
+monitoring_compose_project_dir: "/opt/{{ monitoring_stack_name }}"
+
+monitoring_grafana_admin_user: admin
+monitoring_grafana_admin_password: change-me
+
+monitoring_loki_retention_period: 168h
+
+# Application images consumed by monitoring role.
+monitoring_apps:
+  - name: app-python
+    image: "{{ docker_image }}:{{ docker_tag }}"
+    host_port: 8000
+    container_port: 5000
+    labels:
+      logging: "promtail"
+      app: "devops-python"
+    environment:
+      PORT: "5000"
+  - name: app-go
+    image: "{{ dockerhub_username }}/devops-info-service-go:latest"
+    host_port: 8001
+    container_port: 8080
+    labels:
+      logging: "promtail"
+      app: "devops-go"
+    environment:
+      PORT: "8080"
+
 # Wipe controls (double-gated by variable + web_app_wipe tag)
 web_app_wipe: false
 web_app_wipe_remove_images: false
