@@ -8,17 +8,72 @@ import os
 import socket
 import platform
 import logging
+import json
+import sys
+import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+class JSONFormatter(logging.Formatter):
+    """Render logs in JSON format for log aggregation systems."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+
+        context_fields = (
+            "event",
+            "method",
+            "path",
+            "status_code",
+            "client_ip",
+            "user_agent",
+            "duration_ms",
+        )
+        for field in context_fields:
+            value = getattr(record, field, None)
+            if value is not None:
+                payload[field] = value
+
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+
+        return json.dumps(payload, separators=(",", ":"))
+
+
+def configure_logging() -> None:
+    """Configure root logger to emit single-line JSON records."""
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(JSONFormatter())
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.handlers = [handler]
+
+
+configure_logging()
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="DevOps Info Service")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Emit startup metadata once to verify structured logging startup event."""
+    logger.info(
+        "Application startup complete",
+        extra={
+            "event": "startup",
+            "status_code": 200,
+        },
+    )
+    yield
+
+
+app = FastAPI(title="DevOps Info Service", lifespan=lifespan)
 
 # Start time for uptime calculation
 START_TIME = datetime.now(timezone.utc)
@@ -45,12 +100,52 @@ def get_system_info():
         'python_version': platform.python_version()
     }
 
+
+@app.middleware("http")
+async def request_logging_middleware(request: Request, call_next):
+    """Log each request and response with context for observability."""
+    start = time.perf_counter()
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+
+    try:
+        response = await call_next(request)
+    except Exception:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        logger.exception(
+            "Unhandled request exception",
+            extra={
+                "event": "http_error",
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": 500,
+                "client_ip": client_ip,
+                "user_agent": user_agent,
+                "duration_ms": duration_ms,
+            },
+        )
+        return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
+
+    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    logger.info(
+        "HTTP request processed",
+        extra={
+            "event": "http_request",
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "client_ip": client_ip,
+            "user_agent": user_agent,
+            "duration_ms": duration_ms,
+        },
+    )
+    return response
+
 @app.get("/")
 async def root(request: Request):
     """
     Main endpoint returning service and system information.
     """
-    logger.info("Processing request for /")
     uptime = get_uptime()
 
     return {
@@ -84,7 +179,6 @@ async def health():
     """
     Health check endpoint.
     """
-    logger.debug("Processing request for /health")
     return {
         'status': 'healthy',
         'timestamp': datetime.now(timezone.utc).isoformat(),
@@ -95,4 +189,4 @@ if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "5000"))
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=host, port=port, log_config=None, access_log=False)

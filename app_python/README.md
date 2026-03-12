@@ -74,7 +74,7 @@ Response:
 
 ### Build Image
 ```bash
-docker build -t devops-info-service-python .
+docker build -t devops-lab03-python .
 ```
 
 ### Run Container

@@ -1,0 +1,70 @@
+---
+monitoring_stack_name: monitoring
+monitoring_compose_project_dir: "/opt/{{ monitoring_stack_name }}"
+monitoring_compose_version: "3.8"
+
+monitoring_loki_version: "3.0.0"
+monitoring_promtail_version: "3.0.0"
+monitoring_grafana_version: "12.3.1"
+
+monitoring_loki_port: 3100
+monitoring_promtail_port: 9080
+monitoring_grafana_port: 3000
+
+monitoring_loki_schema_version: v13
+monitoring_loki_retention_period: 168h
+
+monitoring_grafana_admin_user: admin
+monitoring_grafana_admin_password: change-me
+monitoring_grafana_anonymous_enabled: false
+monitoring_grafana_allow_embedding: true
+monitoring_grafana_loki_datasource_name: Loki
+monitoring_grafana_loki_datasource_url: "http://loki:{{ monitoring_loki_port }}"
+
+monitoring_pull_policy: missing
+
+monitoring_promtail_docker_label_filters:
+  - logging=promtail
+
+monitoring_loki_resources:
+  limits:
+    cpus: "1.00"
+    memory: "1G"
+  reservations:
+    cpus: "0.50"
+    memory: "512M"
+
+monitoring_promtail_resources:
+  limits:
+    cpus: "0.50"
+    memory: "512M"
+  reservations:
+    cpus: "0.25"
+    memory: "256M"
+
+monitoring_grafana_resources:
+  limits:
+    cpus: "1.00"
+    memory: "1G"
+  reservations:
+    cpus: "0.50"
+    memory: "512M"
+
+monitoring_default_app_resources:
+  limits:
+    cpus: "0.75"
+    memory: "768M"
+  reservations:
+    cpus: "0.25"
+    memory: "256M"
+
+monitoring_apps:
+  - name: app-python
+    image: "{{ docker_image | default((dockerhub_username | default('your_dockerhub_username')) ~ '/devops-info-service') }}:{{ docker_tag | default('latest') }}"
+    host_port: 8000
+    container_port: 5000
+    labels:
+      logging: "promtail"
+      app: "devops-python"
+    environment:
+      PORT: "5000"
