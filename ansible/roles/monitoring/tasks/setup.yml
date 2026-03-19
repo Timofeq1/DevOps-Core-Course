@@ -8,9 +8,11 @@
     - "{{ monitoring_compose_project_dir }}"
     - "{{ monitoring_compose_project_dir }}/loki"
     - "{{ monitoring_compose_project_dir }}/promtail"
+    - "{{ monitoring_compose_project_dir }}/prometheus"
     - "{{ monitoring_compose_project_dir }}/grafana"
     - "{{ monitoring_compose_project_dir }}/grafana/provisioning"
     - "{{ monitoring_compose_project_dir }}/grafana/provisioning/dashboards"
+    - "{{ monitoring_compose_project_dir }}/grafana/provisioning/datasources"
     - "{{ monitoring_compose_project_dir }}/grafana/dashboards"
 
 - name: Render monitoring compose manifest
@@ -37,14 +39,32 @@
     dest: "{{ monitoring_compose_project_dir }}/promtail/config.yml"
     mode: "0644"
 
+- name: Render Prometheus config
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: "{{ monitoring_compose_project_dir }}/prometheus/prometheus.yml"
+    mode: "0644"
+
 - name: Render Grafana dashboard provisioning
   ansible.builtin.template:
     src: grafana-dashboards.yml.j2
     dest: "{{ monitoring_compose_project_dir }}/grafana/provisioning/dashboards/dashboards.yml"
     mode: "0644"
 
+- name: Render Grafana datasource provisioning
+  ansible.builtin.template:
+    src: grafana-datasources.yml.j2
+    dest: "{{ monitoring_compose_project_dir }}/grafana/provisioning/datasources/datasources.yml"
+    mode: "0644"
+
 - name: Render Lab07 dashboard JSON
   ansible.builtin.template:
     src: lab07-logs-dashboard.json.j2
     dest: "{{ monitoring_compose_project_dir }}/grafana/dashboards/lab07-logs-dashboard.json"
+    mode: "0644"
+
+- name: Render Lab08 metrics dashboard JSON
+  ansible.builtin.template:
+    src: lab08-metrics-dashboard.json.j2
+    dest: "{{ monitoring_compose_project_dir }}/grafana/dashboards/lab08-metrics-dashboard.json"
     mode: "0644"

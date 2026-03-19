@@ -63,6 +63,9 @@ Response:
 }
 ```
 
+### GET /metrics
+Returns Prometheus metrics in text exposition format for scraping.
+
 ## Configuration
 
 | Variable | Description | Default |

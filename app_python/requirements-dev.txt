@@ -4,3 +4,4 @@ pytest-cov==4.1.0
 pylint==3.0.3
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
+prometheus-client==0.23.1

@@ -24,6 +24,9 @@ monitoring_grafana_admin_user: admin
 monitoring_grafana_admin_password: change-me
 
 monitoring_loki_retention_period: 168h
+monitoring_prometheus_retention_days: 15
+monitoring_prometheus_retention_size: "10GB"
+monitoring_prometheus_scrape_interval: "15s"
 
 # Application images consumed by monitoring role.
 monitoring_apps:

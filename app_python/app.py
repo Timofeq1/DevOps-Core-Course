@@ -14,7 +14,38 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+
+
+HTTP_REQUESTS_TOTAL = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status_code"],
+)
+
+HTTP_REQUEST_DURATION_SECONDS = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint", "status_code"],
+)
+
+HTTP_REQUESTS_IN_PROGRESS = Gauge(
+    "http_requests_in_progress",
+    "HTTP requests currently being processed",
+    ["method", "endpoint"],
+)
+
+DEVOPS_INFO_ENDPOINT_CALLS_TOTAL = Counter(
+    "devops_info_endpoint_calls_total",
+    "Total calls to application endpoints",
+    ["endpoint"],
+)
+
+DEVOPS_INFO_SYSTEM_COLLECTION_SECONDS = Histogram(
+    "devops_info_system_collection_seconds",
+    "Time spent collecting system information",
+)
 
 class JSONFormatter(logging.Formatter):
     """Render logs in JSON format for log aggregation systems."""
@@ -78,6 +109,14 @@ app = FastAPI(title="DevOps Info Service", lifespan=lifespan)
 # Start time for uptime calculation
 START_TIME = datetime.now(timezone.utc)
 
+
+def normalize_endpoint(request: Request) -> str:
+    """Return low-cardinality endpoint labels for metrics."""
+    route = request.scope.get("route")
+    if route is not None and getattr(route, "path", None):
+        return route.path
+    return "unmatched"
+
 def get_uptime():
     """Calculate the uptime of the application."""
     delta = datetime.now(timezone.utc) - START_TIME
@@ -107,38 +146,66 @@ async def request_logging_middleware(request: Request, call_next):
     start = time.perf_counter()
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent", "unknown")
+    endpoint = normalize_endpoint(request)
+    in_progress = HTTP_REQUESTS_IN_PROGRESS.labels(method=request.method, endpoint=endpoint)
+    in_progress.inc()
 
     try:
         response = await call_next(request)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
+        duration_seconds = time.perf_counter() - start
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        HTTP_REQUESTS_TOTAL.labels(
+            method=request.method,
+            endpoint=endpoint,
+            status_code="500",
+        ).inc()
+        HTTP_REQUEST_DURATION_SECONDS.labels(
+            method=request.method,
+            endpoint=endpoint,
+            status_code="500",
+        ).observe(duration_seconds)
         logger.exception(
             "Unhandled request exception",
             extra={
                 "event": "http_error",
                 "method": request.method,
-                "path": request.url.path,
+                "path": endpoint,
                 "status_code": 500,
                 "client_ip": client_ip,
                 "user_agent": user_agent,
                 "duration_ms": duration_ms,
             },
         )
+        in_progress.dec()
         return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
-    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    duration_seconds = time.perf_counter() - start
+    duration_ms = round(duration_seconds * 1000, 2)
+    status_code = str(response.status_code)
+    HTTP_REQUESTS_TOTAL.labels(
+        method=request.method,
+        endpoint=endpoint,
+        status_code=status_code,
+    ).inc()
+    HTTP_REQUEST_DURATION_SECONDS.labels(
+        method=request.method,
+        endpoint=endpoint,
+        status_code=status_code,
+    ).observe(duration_seconds)
     logger.info(
         "HTTP request processed",
         extra={
             "event": "http_request",
             "method": request.method,
-            "path": request.url.path,
+            "path": endpoint,
             "status_code": response.status_code,
             "client_ip": client_ip,
             "user_agent": user_agent,
             "duration_ms": duration_ms,
         },
     )
+    in_progress.dec()
     return response
 
 @app.get("/")
@@ -146,7 +213,10 @@ async def root(request: Request):
     """
     Main endpoint returning service and system information.
     """
+    DEVOPS_INFO_ENDPOINT_CALLS_TOTAL.labels(endpoint="/").inc()
     uptime = get_uptime()
+    with DEVOPS_INFO_SYSTEM_COLLECTION_SECONDS.time():
+        system_info = get_system_info()
 
     return {
         "service": {
@@ -155,7 +225,7 @@ async def root(request: Request):
             "description": "DevOps course info service",
             "framework": "FastAPI"
         },
-        "system": get_system_info(),
+        "system": system_info,
         "runtime": {
             "uptime_seconds": uptime['seconds'],
             "uptime_human": uptime['human'],
@@ -170,7 +240,8 @@ async def root(request: Request):
         },
         "endpoints": [
             {"path": "/", "method": "GET", "description": "Service information"},
-            {"path": "/health", "method": "GET", "description": "Health check"}
+            {"path": "/health", "method": "GET", "description": "Health check"},
+            {"path": "/metrics", "method": "GET", "description": "Prometheus metrics"}
         ]
     }
 
@@ -179,11 +250,19 @@ async def health():
     """
     Health check endpoint.
     """
+    DEVOPS_INFO_ENDPOINT_CALLS_TOTAL.labels(endpoint="/health").inc()
     return {
         'status': 'healthy',
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'uptime_seconds': get_uptime()['seconds']
     }
+
+
+@app.get("/metrics")
+async def metrics():
+    """Expose Prometheus metrics."""
+    DEVOPS_INFO_ENDPOINT_CALLS_TOTAL.labels(endpoint="/metrics").inc()
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 if __name__ == "__main__":
     import uvicorn

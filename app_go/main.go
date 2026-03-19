@@ -55,6 +55,26 @@ type ServiceInfo struct {
 
 var startTime = time.Now()
 
+func runHealthcheck(port string) error {
+	client := &http.Client{Timeout: 2 * time.Second}
+	request, err := http.NewRequest(http.MethodGet, "http://127.0.0.1:"+port+"/health", nil)
+	if err != nil {
+		return err
+	}
+
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", response.StatusCode)
+	}
+
+	return nil
+}
+
 func getUptime() (float64, string) {
 	duration := time.Since(startTime)
 	seconds := duration.Seconds()
@@ -132,13 +152,21 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", mainHandler)
-	http.HandleFunc("/health", healthHandler)
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
+	if len(os.Args) > 1 && os.Args[1] == "--healthcheck" {
+		if err := runHealthcheck(port); err != nil {
+			log.Printf("Healthcheck failed: %v", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	http.HandleFunc("/", mainHandler)
+	http.HandleFunc("/health", healthHandler)
 
 	log.Printf("Starting server on port %s...", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

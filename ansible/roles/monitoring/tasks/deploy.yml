@@ -25,6 +25,12 @@
     port: "{{ monitoring_grafana_port }}"
     timeout: 120
 
+- name: Wait for Prometheus port
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ monitoring_prometheus_port }}"
+    timeout: 120
+
 - name: Wait for Loki readiness endpoint
   ansible.builtin.uri:
     url: "http://127.0.0.1:{{ monitoring_loki_port }}/ready"
@@ -44,3 +50,13 @@
   retries: 20
   delay: 3
   until: monitoring_grafana_ready.status == 200
+
+- name: Wait for Prometheus health endpoint
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ monitoring_prometheus_port }}/-/healthy"
+    method: GET
+    status_code: 200
+  register: monitoring_prometheus_ready
+  retries: 20
+  delay: 3
+  until: monitoring_prometheus_ready.status == 200

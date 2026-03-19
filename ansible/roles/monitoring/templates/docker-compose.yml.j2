@@ -66,8 +66,10 @@ services:
       GF_SECURITY_ADMIN_USER: "${GF_SECURITY_ADMIN_USER}"
       GF_SECURITY_ADMIN_PASSWORD: "${GF_SECURITY_ADMIN_PASSWORD}"
       GF_SECURITY_ALLOW_EMBEDDING: "{{ monitoring_grafana_allow_embedding | ternary('true', 'false') }}"
+      GF_METRICS_ENABLED: "true"
     depends_on:
       - loki
+      - prometheus
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:{{ monitoring_grafana_port }}/api/health || exit 1"]
       interval: 10s
@@ -82,6 +84,35 @@ services:
         reservations:
           cpus: "{{ monitoring_grafana_resources.reservations.cpus }}"
           memory: "{{ monitoring_grafana_resources.reservations.memory }}"
+    restart: unless-stopped
+    networks:
+      - logging
+
+  prometheus:
+    image: "prom/prometheus:v{{ monitoring_prometheus_version }}"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time={{ monitoring_prometheus_retention_days }}d"
+      - "--storage.tsdb.retention.size={{ monitoring_prometheus_retention_size }}"
+    ports:
+      - "{{ monitoring_prometheus_port }}:{{ monitoring_prometheus_port }}"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:{{ monitoring_prometheus_port }}/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "{{ monitoring_prometheus_resources.limits.cpus }}"
+          memory: "{{ monitoring_prometheus_resources.limits.memory }}"
+        reservations:
+          cpus: "{{ monitoring_prometheus_resources.reservations.cpus }}"
+          memory: "{{ monitoring_prometheus_resources.reservations.memory }}"
     restart: unless-stopped
     networks:
       - logging
@@ -105,6 +136,35 @@ services:
       {{ label_key }}: "{{ label_value }}"
 {% endfor %}
 {% endif %}
+{% if app.healthcheck is defined %}
+    healthcheck:
+      test: {{ app.healthcheck.test }}
+      interval: {{ app.healthcheck.interval }}
+      timeout: {{ app.healthcheck.timeout }}
+      retries: {{ app.healthcheck.retries }}
+      start_period: {{ app.healthcheck.start_period }}
+{% elif app.name == 'app-python' %}
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:{{ app.container_port }}/health', timeout=2)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+{% elif app.name == 'app-go' %}
+    healthcheck:
+      test:
+        - CMD
+        - /app/app
+        - --healthcheck
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+{% endif %}
     deploy:
       resources:
         limits:
@@ -121,6 +181,7 @@ services:
 volumes:
   loki-data:
   grafana-data:
+  prometheus-data:
   promtail-positions:
 
 networks:

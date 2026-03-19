@@ -6,13 +6,35 @@ monitoring_compose_version: "3.8"
 monitoring_loki_version: "3.0.0"
 monitoring_promtail_version: "3.0.0"
 monitoring_grafana_version: "12.3.1"
+monitoring_prometheus_version: "3.9.0"
 
 monitoring_loki_port: 3100
 monitoring_promtail_port: 9080
 monitoring_grafana_port: 3000
+monitoring_prometheus_port: 9090
 
 monitoring_loki_schema_version: v13
 monitoring_loki_retention_period: 168h
+monitoring_prometheus_retention_days: 15
+monitoring_prometheus_retention_size: "10GB"
+monitoring_prometheus_scrape_interval: "15s"
+
+monitoring_prometheus_targets:
+  - job: "prometheus"
+    targets:
+      - "localhost:{{ monitoring_prometheus_port }}"
+  - job: "loki"
+    targets:
+      - "loki:{{ monitoring_loki_port }}"
+    path: "/metrics"
+  - job: "grafana"
+    targets:
+      - "grafana:{{ monitoring_grafana_port }}"
+    path: "/metrics"
+  - job: "app"
+    targets:
+      - "app-python:5000"
+    path: "/metrics"
 
 monitoring_grafana_admin_user: admin
 monitoring_grafana_admin_password: change-me
@@ -20,6 +42,8 @@ monitoring_grafana_anonymous_enabled: false
 monitoring_grafana_allow_embedding: true
 monitoring_grafana_loki_datasource_name: Loki
 monitoring_grafana_loki_datasource_url: "http://loki:{{ monitoring_loki_port }}"
+monitoring_grafana_prometheus_datasource_name: Prometheus
+monitoring_grafana_prometheus_datasource_url: "http://prometheus:{{ monitoring_prometheus_port }}"
 
 monitoring_pull_policy: missing
 
@@ -42,7 +66,7 @@ monitoring_promtail_resources:
     cpus: "0.25"
     memory: "256M"
 
-monitoring_grafana_resources:
+monitoring_prometheus_resources:
   limits:
     cpus: "1.00"
     memory: "1G"
@@ -50,13 +74,21 @@ monitoring_grafana_resources:
     cpus: "0.50"
     memory: "512M"
 
-monitoring_default_app_resources:
+monitoring_grafana_resources:
   limits:
-    cpus: "0.75"
-    memory: "768M"
+    cpus: "0.50"
+    memory: "512M"
   reservations:
     cpus: "0.25"
     memory: "256M"
+
+monitoring_default_app_resources:
+  limits:
+    cpus: "0.50"
+    memory: "256M"
+  reservations:
+    cpus: "0.25"
+    memory: "128M"
 
 monitoring_apps:
   - name: app-python
@@ -68,3 +100,13 @@ monitoring_apps:
       app: "devops-python"
     environment:
       PORT: "5000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=2)"
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+      start_period: "15s"
