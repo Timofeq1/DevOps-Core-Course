@@ -1,0 +1,17 @@
+apiVersion: v2
+name: app-python
+description: Helm chart for the Lab 9 Python application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - python
+  - fastapi
+  - devops-course
+maintainers:
+  - name: Timofey Ivlev
+    email: t.ivlev@innopolis.university
+dependencies:
+  - name: common-lib
+    version: 0.1.0
+    repository: "file://../common-lib"
