@@ -1,0 +1,27 @@
+{{- if .Values.hooks.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "common.fullname" . }}-pre-install
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        {{- include "common.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: pre-install
+          image: {{ .Values.hooks.image }}
+          command:
+            - sh
+            - -c
+            - {{ tpl .Values.hooks.preInstallCommand . | quote }}
+{{- end }}

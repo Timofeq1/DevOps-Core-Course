@@ -32,6 +32,20 @@ def test_health_check():
     assert "uptime_seconds" in data
     assert isinstance(data["uptime_seconds"], int)
 
+
+def test_metrics_endpoint():
+    """Test Prometheus metrics endpoint."""
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+
+    payload = response.text
+    assert "http_requests_total" in payload
+    assert "http_request_duration_seconds" in payload
+    assert "http_requests_in_progress" in payload
+    assert "devops_info_endpoint_calls_total" in payload
+
+
 def test_root_not_found():
     """Test a non-existent endpoint"""
     response = client.get("/non-existent")

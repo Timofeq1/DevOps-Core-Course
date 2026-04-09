@@ -15,4 +15,5 @@
 cd ansible
 ansible-playbook playbooks/provision.yml
 ansible-playbook playbooks/deploy.yml
+ansible-playbook playbooks/deploy-monitoring.yml
 ```

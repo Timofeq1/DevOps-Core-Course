@@ -1,0 +1,16 @@
+1. Chart installed successfully.
+
+2. Release details:
+   helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+3. Rendered values:
+   helm get values {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+4. Service endpoint hint:
+{{- if eq .Values.service.type "NodePort" }}
+   kubectl get svc {{ include "common.fullname" . }} -n {{ .Release.Namespace }}
+{{- else if eq .Values.service.type "LoadBalancer" }}
+   kubectl get svc {{ include "common.fullname" . }} -n {{ .Release.Namespace }} -w
+{{- else }}
+   kubectl port-forward svc/{{ include "common.fullname" . }} 8080:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+{{- end }}

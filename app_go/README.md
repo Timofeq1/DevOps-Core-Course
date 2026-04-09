@@ -33,3 +33,11 @@ Returns service metadata and system information.
 
 ### GET /health
 Returns health status and uptime.
+
+## Healthcheck Command
+
+Docker uses built-in healthcheck mode in minimal images:
+
+```bash
+./app --healthcheck
+```

@@ -1,0 +1,50 @@
+replicaCount: 2
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: timofeq1/devops-lab03-python
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+containerPort: 5000
+
+env:
+  - name: HOST
+    value: "0.0.0.0"
+  - name: PORT
+    value: "5000"
+  - name: APP_VARIANT
+    value: "v2"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5000
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "300m"
+    memory: "256Mi"
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 5000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 5000
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3

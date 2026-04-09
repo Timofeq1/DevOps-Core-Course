@@ -1,0 +1,9 @@
+---
+- name: Prepare monitoring stack files
+  ansible.builtin.include_tasks: setup.yml
+
+- name: Deploy monitoring stack services
+  ansible.builtin.include_tasks: deploy.yml
+
+- name: Configure Grafana data source
+  ansible.builtin.include_tasks: configure_grafana.yml
