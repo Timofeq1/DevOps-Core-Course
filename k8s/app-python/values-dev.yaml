@@ -1,5 +1,9 @@
 replicaCount: 1
 
+appConfig:
+  environment: "dev"
+  logLevel: "debug"
+
 image:
   tag: "latest"
 
@@ -24,3 +28,9 @@ livenessProbe:
 readinessProbe:
   initialDelaySeconds: 3
   periodSeconds: 5
+
+secret:
+  enabled: true
+
+vault:
+  enabled: false

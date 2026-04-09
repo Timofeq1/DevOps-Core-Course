@@ -3,6 +3,10 @@ replicaCount: 3
 nameOverride: ""
 fullnameOverride: ""
 
+serviceAccount:
+  create: true
+  name: ""
+
 image:
   repository: timofeq1/devops-lab03-python
   tag: "latest"
@@ -15,6 +19,29 @@ env:
     value: "0.0.0.0"
   - name: PORT
     value: "5000"
+
+appConfig:
+  environment: "dev"
+  logLevel: "info"
+
+secret:
+  enabled: true
+  name: ""
+  data:
+    username: "change-me"
+    password: "change-me"
+
+vault:
+  enabled: false
+  role: "app-python"
+  secretPath: "secret/data/myapp/config"
+  injectFileName: "config"
+  agentInjectCommand: ""
+  injectTemplate: |
+    {{- with secret "secret/data/myapp/config" -}}
+    APP_USERNAME={{ .Data.data.username }}
+    APP_PASSWORD={{ .Data.data.password }}
+    {{- end -}}
 
 service:
   type: NodePort
