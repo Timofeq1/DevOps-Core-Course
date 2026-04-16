@@ -1,5 +1,9 @@
 replicaCount: 5
 
+appConfig:
+  environment: "prod"
+  logLevel: "info"
+
 image:
   tag: "1.0.0"
 
@@ -24,3 +28,9 @@ livenessProbe:
 readinessProbe:
   initialDelaySeconds: 10
   periodSeconds: 3
+
+secret:
+  enabled: true
+
+vault:
+  enabled: false
