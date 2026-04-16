@@ -46,6 +46,21 @@ def test_metrics_endpoint():
     assert "devops_info_endpoint_calls_total" in payload
 
 
+def test_visits_counter():
+    """Root endpoint increments persistent visits counter."""
+    before = client.get("/visits")
+    assert before.status_code == 200
+    before_visits = before.json()["visits"]
+
+    hit_root = client.get("/")
+    assert hit_root.status_code == 200
+
+    after = client.get("/visits")
+    assert after.status_code == 200
+    after_visits = after.json()["visits"]
+    assert after_visits == before_visits + 1
+
+
 def test_root_not_found():
     """Test a non-existent endpoint"""
     response = client.get("/non-existent")

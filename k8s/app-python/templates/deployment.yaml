@@ -18,8 +18,9 @@ spec:
     metadata:
       labels:
         {{- include "common.selectorLabels" . | nindent 8 }}
-      {{- if .Values.vault.enabled }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if .Values.vault.enabled }}
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: {{ .Values.vault.role | quote }}
         {{ printf "vault.hashicorp.com/agent-inject-secret-%s" .Values.vault.injectFileName }}: {{ .Values.vault.secretPath | quote }}
@@ -28,9 +29,11 @@ spec:
         {{- if .Values.vault.agentInjectCommand }}
         {{ printf "vault.hashicorp.com/agent-inject-command-%s" .Values.vault.injectFileName }}: {{ .Values.vault.agentInjectCommand | quote }}
         {{- end }}
-      {{- end }}
+        {{- end }}
     spec:
       serviceAccountName: {{ include "app-python.serviceAccountName" . }}
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -39,22 +42,40 @@ spec:
             - name: http
               containerPort: {{ .Values.containerPort }}
               protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "app-python.envConfigMapName" . }}
+          {{- if .Values.secret.enabled }}
+            - secretRef:
+                name: {{ include "app-python.secretName" . }}
+          {{- end }}
           env:
-            {{- include "app-python.envVars" . | nindent 12 }}
             {{- with .Values.env }}
             {{- range . }}
             - name: {{ .name }}
               value: {{ .value | quote }}
             {{- end }}
             {{- end }}
-          {{- if .Values.secret.enabled }}
-          envFrom:
-            - secretRef:
-                name: {{ include "app-python.secretName" . }}
-          {{- end }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: {{ .Values.config.mountPath }}
+              readOnly: true
+            - name: data-volume
+              mountPath: {{ .Values.persistence.mountPath }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "app-python.fileConfigMapName" . }}
+        - name: data-volume
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "app-python.pvcName" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

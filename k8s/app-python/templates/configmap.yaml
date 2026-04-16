@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app-python.fileConfigMapName" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  {{ .Values.config.fileName }}: |-
+{{ tpl (.Files.Get "files/config.json") . | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app-python.envConfigMapName" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  APP_NAME: {{ .Values.appConfig.name | quote }}
+  APP_ENV: {{ .Values.appConfig.environment | quote }}
+  LOG_LEVEL: {{ .Values.appConfig.logLevel | quote }}
+  VISITS_FILE: {{ .Values.visits.filePath | quote }}

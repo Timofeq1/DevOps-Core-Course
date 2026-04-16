@@ -17,6 +17,27 @@ Resolve secret name for app credentials.
 {{- end -}}
 
 {{/*
+Resolve ConfigMap name for file-based configuration.
+*/}}
+{{- define "app-python.fileConfigMapName" -}}
+{{- printf "%s-config" (include "common.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Resolve ConfigMap name for environment variable configuration.
+*/}}
+{{- define "app-python.envConfigMapName" -}}
+{{- printf "%s-env" (include "common.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Resolve PVC name for persistent application data.
+*/}}
+{{- define "app-python.pvcName" -}}
+{{- printf "%s-data" (include "common.fullname" .) -}}
+{{- end -}}
+
+{{/*
 Common non-secret env vars rendered via include for DRY usage.
 */}}
 {{- define "app-python.envVars" -}}

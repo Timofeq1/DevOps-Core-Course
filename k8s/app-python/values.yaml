@@ -21,8 +21,23 @@ env:
     value: "5000"
 
 appConfig:
+  name: "devops-info-service"
   environment: "dev"
   logLevel: "info"
+
+config:
+  mountPath: "/config"
+  fileName: "config.json"
+
+visits:
+  filePath: "/data/visits"
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 100Mi
+  storageClass: ""
+  mountPath: "/data"
 
 secret:
   enabled: true

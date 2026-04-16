@@ -1,8 +1,17 @@
 replicaCount: 1
 
 appConfig:
+  name: "devops-info-service"
   environment: "dev"
   logLevel: "debug"
+
+visits:
+  filePath: "/data/visits"
+
+persistence:
+  enabled: true
+  size: 100Mi
+  storageClass: ""
 
 image:
   tag: "latest"

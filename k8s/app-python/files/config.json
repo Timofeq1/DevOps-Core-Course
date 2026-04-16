@@ -1,0 +1,15 @@
+{
+  "application": {
+    "name": "{{ .Values.appConfig.name }}",
+    "environment": "{{ .Values.appConfig.environment }}",
+    "logLevel": "{{ .Values.appConfig.logLevel }}"
+  },
+  "featureFlags": {
+    "visitsEndpoint": true,
+    "metricsEnabled": true
+  },
+  "settings": {
+    "visitsFile": "{{ .Values.visits.filePath }}",
+    "readinessPath": "/health"
+  }
+}
