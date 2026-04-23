@@ -62,7 +62,7 @@ service:
   type: NodePort
   port: 80
   targetPort: 5000
-  nodePort: 30081
+  nodePort: 30084
 
 resources:
   requests:
