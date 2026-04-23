@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/Timofeq1/DevOps-Core-Course.git
-    targetRevision: main
+    targetRevision: lab13
     path: k8s/app-python
     helm:
       valueFiles:
