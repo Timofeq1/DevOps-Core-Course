@@ -21,8 +21,23 @@ env:
     value: "5000"
 
 appConfig:
+  name: "devops-info-service"
   environment: "dev"
   logLevel: "info"
+
+config:
+  mountPath: "/config"
+  fileName: "config.json"
+
+visits:
+  filePath: "/data/visits"
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 100Mi
+  storageClass: ""
+  mountPath: "/data"
 
 secret:
   enabled: true
@@ -47,7 +62,7 @@ service:
   type: NodePort
   port: 80
   targetPort: 5000
-  nodePort: 30080
+  nodePort: 30084
 
 resources:
   requests:

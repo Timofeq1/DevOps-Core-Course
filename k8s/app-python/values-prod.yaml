@@ -1,11 +1,20 @@
 replicaCount: 5
 
 appConfig:
+  name: "devops-info-service"
   environment: "prod"
   logLevel: "info"
 
+visits:
+  filePath: "/data/visits"
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+
 image:
-  tag: "1.0.0"
+  tag: "latest"
 
 service:
   type: LoadBalancer

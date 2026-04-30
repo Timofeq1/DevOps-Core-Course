@@ -11,6 +11,7 @@ import logging
 import json
 import sys
 import time
+import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request
@@ -91,14 +92,78 @@ def configure_logging() -> None:
 configure_logging()
 logger = logging.getLogger(__name__)
 
+VISITS_FILE = os.getenv("VISITS_FILE", "data/visits")
+VISITS_LOCK = threading.Lock()
+
+
+def read_visits_unlocked() -> int:
+    """Read visit count from file, defaulting to 0 when file is absent/invalid."""
+    try:
+        with open(VISITS_FILE, "r", encoding="utf-8") as visits_file:
+            raw_value = visits_file.read().strip()
+    except FileNotFoundError:
+        return 0
+
+    if not raw_value:
+        return 0
+
+    try:
+        return int(raw_value)
+    except ValueError:
+        logger.warning(
+            "Visits file contains invalid value; resetting to 0",
+            extra={
+                "event": "visits_file_invalid",
+                "path": VISITS_FILE,
+            },
+        )
+        return 0
+
+
+def write_visits_unlocked(visits_count: int) -> None:
+    """Persist visit count using atomic replace to reduce partial-write risks."""
+    parent_dir = os.path.dirname(VISITS_FILE)
+    if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+
+    temp_path = f"{VISITS_FILE}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as visits_file:
+        visits_file.write(str(visits_count))
+    os.replace(temp_path, VISITS_FILE)
+
+
+def get_visits_count() -> int:
+    """Return current visits count from persisted storage."""
+    with VISITS_LOCK:
+        return read_visits_unlocked()
+
+
+def increment_visits_count() -> int:
+    """Atomically increment and persist visits count."""
+    with VISITS_LOCK:
+        visits_count = read_visits_unlocked() + 1
+        write_visits_unlocked(visits_count)
+        return visits_count
+
+
+def initialize_visits_storage() -> int:
+    """Ensure visits file exists and contains a valid integer value."""
+    with VISITS_LOCK:
+        visits_count = read_visits_unlocked()
+        write_visits_unlocked(visits_count)
+        return visits_count
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Emit startup metadata once to verify structured logging startup event."""
+    visits_count = initialize_visits_storage()
     logger.info(
         "Application startup complete",
         extra={
             "event": "startup",
             "status_code": 200,
+            "visits": visits_count,
+            "visits_file": VISITS_FILE,
         },
     )
     yield
@@ -213,6 +278,7 @@ async def root(request: Request):
     """
     Main endpoint returning service and system information.
     """
+    visits_count = increment_visits_count()
     DEVOPS_INFO_ENDPOINT_CALLS_TOTAL.labels(endpoint="/").inc()
     uptime = get_uptime()
     with DEVOPS_INFO_SYSTEM_COLLECTION_SECONDS.time():
@@ -238,11 +304,27 @@ async def root(request: Request):
             "method": request.method,
             "path": request.url.path
         },
+        "visits": {
+            "count": visits_count,
+            "storage": VISITS_FILE,
+        },
         "endpoints": [
             {"path": "/", "method": "GET", "description": "Service information"},
             {"path": "/health", "method": "GET", "description": "Health check"},
+            {"path": "/visits", "method": "GET", "description": "Current visits count"},
             {"path": "/metrics", "method": "GET", "description": "Prometheus metrics"}
         ]
+    }
+
+
+@app.get("/visits")
+async def visits_endpoint():
+    """Return current persisted visits count."""
+    DEVOPS_INFO_ENDPOINT_CALLS_TOTAL.labels(endpoint="/visits").inc()
+    current_visits = get_visits_count()
+    return {
+        "visits": current_visits,
+        "storage": VISITS_FILE,
     }
 
 @app.get("/health")

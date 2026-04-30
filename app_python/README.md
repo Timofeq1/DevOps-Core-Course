@@ -40,6 +40,8 @@ HOST=127.0.0.1 PORT=8080 python app.py
 ### GET /
 Returns service metadata and system information.
 
+Also increments a persisted visits counter on each call.
+
 Response:
 ```json
 {
@@ -66,12 +68,24 @@ Response:
 ### GET /metrics
 Returns Prometheus metrics in text exposition format for scraping.
 
+### GET /visits
+Returns current persisted visits count.
+
+Response:
+```json
+{
+   "visits": 7,
+   "storage": "data/visits"
+}
+```
+
 ## Configuration
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | HOST | Bind host address | 0.0.0.0 |
 | PORT | Listen port | 5000 |
+| VISITS_FILE | File path for persisted visits counter | data/visits |
 
 ## Docker
 
@@ -85,11 +99,44 @@ docker build -t devops-lab03-python .
 docker run -d -p 5000:5000 --name python-app timofeq1/devops-lab03-python:latest
 ```
 
+### Run with Persistent Visits Volume
+```bash
+docker run -d -p 5000:5000 \
+   -v $(pwd)/data:/app/data \
+   -e VISITS_FILE=/app/data/visits \
+   --name python-app-persistent \
+   timofeq1/devops-lab03-python:latest
+```
+
 ### Pull from Docker Hub
 ```bash
 docker pull timofeq1/devops-lab03-python:latest
 docker run -d -p 5000:5000 timofeq1/devops-lab03-python:latest
 ```
+
+## Docker Compose (Persistence Test)
+
+Use the provided compose file:
+
+```bash
+mkdir -p data
+chmod 777 data
+docker compose up -d
+```
+
+Quick verification workflow:
+
+```bash
+curl -s http://localhost:5000/visits
+curl -s http://localhost:5000/
+curl -s http://localhost:5000/
+curl -s http://localhost:5000/visits
+cat ./data/visits
+docker compose restart
+curl -s http://localhost:5000/visits
+```
+
+Expected result: visits count keeps increasing after container restart.
 
 ## Testing
 
