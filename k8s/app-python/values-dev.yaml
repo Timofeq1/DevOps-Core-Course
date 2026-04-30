@@ -43,3 +43,23 @@ secret:
 
 vault:
   enabled: false
+
+# -- Progressive delivery strategy (dev: canary with shorter pauses)
+strategy:
+  type: canary
+  canary:
+    steps:
+      - setWeight: 30
+      - pause: {}  # Manual promotion for first step
+      - setWeight: 60
+      - pause:
+          duration: 10s
+      - setWeight: 100
+
+# -- Preview service nodePort for blue-green
+previewService:
+  nodePort: 30086
+
+# -- Automated analysis (disabled by default)
+analysis:
+  enabled: false
