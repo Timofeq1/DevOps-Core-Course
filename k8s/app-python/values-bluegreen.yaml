@@ -1,0 +1,21 @@
+# Blue-Green deployment values for app-python
+replicaCount: 2
+
+strategy:
+  type: blueGreen
+  blueGreen:
+    autoPromotionEnabled: false
+    # autoPromotionSeconds: 30
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+  nodePort: 30084
+
+previewService:
+  nodePort: 30086
+
+# Disable persistence for blue-green demo
+persistence:
+  enabled: false

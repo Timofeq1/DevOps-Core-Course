@@ -64,6 +64,54 @@ service:
   targetPort: 5000
   nodePort: 30084
 
+# -- Progressive delivery strategy configuration
+strategy:
+  # -- Strategy type: "canary", "blueGreen", or "rollingUpdate" (defaults to Deployment)
+  type: canary
+  canary:
+    # -- Canary steps for progressive traffic shifting
+    steps:
+      - setWeight: 20
+      - pause: {}  # Manual promotion required
+      - setWeight: 40
+      - pause:
+          duration: 30s
+      - setWeight: 60
+      - pause:
+          duration: 30s
+      - setWeight: 80
+      - pause:
+          duration: 30s
+      - setWeight: 100
+    # -- Optional traffic routing configuration (e.g., for Istio/NGINX)
+    # trafficRouting:
+    #   nginx:
+    #     stableIngress: app-python-stable
+  blueGreen:
+    autoPromotionEnabled: false
+    # autoPromotionSeconds: 30
+    # prePromotionAnalysis:
+    #   templates:
+    #     - templateName: success-rate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# -- Preview service for blue-green deployments
+previewService:
+  nodePort: 30086
+
+# -- Automated analysis for progressive delivery (bonus)
+analysis:
+  enabled: false
+  metricName: webcheck
+  webURL: ""  # Auto-generated if empty
+  jsonPath: "{$.status}"
+  successCondition: "result == 'ok'"
+  interval: 10s
+  count: 3
+  failureLimit: 1
+
 resources:
   requests:
     cpu: "100m"

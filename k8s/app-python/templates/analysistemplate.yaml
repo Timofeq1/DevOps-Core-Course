@@ -1,0 +1,19 @@
+{{- if .Values.analysis.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "common.fullname" . }}-success-rate
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  metrics:
+    - name: {{ .Values.analysis.metricName | default "webcheck" }}
+      provider:
+        web:
+          url: {{ .Values.analysis.webURL | default (printf "http://%s.%s.svc.cluster.local/health" (include "common.fullname" .) .Release.Namespace) }}
+          jsonPath: {{ .Values.analysis.jsonPath | default "{$.status}" }}
+      successCondition: {{ .Values.analysis.successCondition | default "result == 'ok'" }}
+      interval: {{ .Values.analysis.interval | default "10s" }}
+      count: {{ .Values.analysis.count | default "3" }}
+      failureLimit: {{ .Values.analysis.failureLimit | default "1" }}
+{{- end }}
