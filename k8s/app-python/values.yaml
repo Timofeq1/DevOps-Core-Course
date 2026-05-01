@@ -39,6 +39,20 @@ persistence:
   storageClass: ""
   mountPath: "/data"
 
+# -- StatefulSet mode: replaces Deployment/Rollout with StatefulSet + headless service
+statefulset:
+  enabled: false
+  # -- Pod management policy: OrderedReady or Parallel
+  podManagementPolicy: OrderedReady
+  # -- Update strategy for StatefulSet pods
+  updateStrategy:
+    # -- Strategy type: RollingUpdate or OnDelete
+    type: RollingUpdate
+    rollingUpdate:
+      # -- Partition for staged rollouts (pods with ordinal >= partition get updated)
+      # Set to 0 to update all pods, or higher to only update a subset
+      partition: 0
+
 secret:
   enabled: true
   name: ""

@@ -1,0 +1,37 @@
+# StatefulSet mode configuration for Lab 15
+# Deploy with: helm install app-python . -f values-statefulset.yaml
+
+statefulset:
+  enabled: true
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
+# Disable progressive delivery strategy (StatefulSet doesn't use Rollouts)
+strategy:
+  type: rollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+replicaCount: 3
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 100Mi
+  storageClass: ""
+  mountPath: "/data"
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+  nodePort: 30087
+
+image:
+  repository: timofeq1/devops-lab03-python
+  tag: "latest"
+  pullPolicy: IfNotPresent
