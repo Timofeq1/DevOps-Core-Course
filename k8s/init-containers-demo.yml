@@ -1,0 +1,86 @@
+# Lab 16 -- Init Containers Demo
+# Task 3: Two init container patterns
+#   1. Download a file into a shared volume
+#   2. Wait for a service to be ready before starting the main container
+
+---
+# Pattern 1: Init container downloads a file that the main container reads
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-download-demo
+  labels:
+    app: init-demo
+    lab: lab16
+spec:
+  initContainers:
+    - name: init-download
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "=== Init container: downloading file ==="
+          wget -q -O /work-dir/index.html https://example.com
+          echo "=== Download complete ==="
+          ls -la /work-dir/
+      volumeMounts:
+        - name: workdir
+          mountPath: /work-dir
+  containers:
+    - name: main-app
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "=== Main container: reading downloaded file ==="
+          echo "File size: $(wc -c < /data/index.html) bytes"
+          echo "First 200 chars:"
+          head -c 200 /data/index.html
+          echo ""
+          echo "=== Sleeping to keep pod alive ==="
+          sleep 3600
+      volumeMounts:
+        - name: workdir
+          mountPath: /data
+  volumes:
+    - name: workdir
+      emptyDir: {}
+  restartPolicy: Never
+
+---
+# Pattern 2: Init container waits until a Kubernetes service becomes resolvable
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-wait-for-svc-demo
+  labels:
+    app: init-demo
+    lab: lab16
+spec:
+  initContainers:
+    - name: wait-for-service
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "=== Init container: waiting for app-python-service to be resolvable ==="
+          until nslookup app-python-service.default.svc.cluster.local 2>/dev/null; do
+            echo "  Service not ready yet, retrying in 2s..."
+            sleep 2
+          done
+          echo "=== Service resolved! Starting main container ==="
+  containers:
+    - name: main-app
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "=== Main container: service is available ==="
+          nslookup app-python-service.default.svc.cluster.local
+          echo "=== All good, sleeping ==="
+          sleep 3600
+  restartPolicy: Never
