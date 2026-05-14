@@ -1,0 +1,27 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "edge-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-05-14",
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true,
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"vars": {
+		"APP_NAME": "edge-api",
+		"COURSE_NAME": "devops-core"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "SETTINGS",
+			"id": "08e385de3e704c76b5a9b07ae285fe45"
+		}
+	]
+}
