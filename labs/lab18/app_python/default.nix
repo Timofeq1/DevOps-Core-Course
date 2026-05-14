@@ -19,13 +19,14 @@ pkgs.python3Packages.buildPythonApplication {
   nativeBuildInputs = [ pkgs.makeWrapper ];
 
   installPhase = ''
-    mkdir -p $out/bin
-    cp app.py $out/bin/devops-info-service
-    chmod +x $out/bin/devops-info-service
+    mkdir -p $out/bin $out/share
 
-    # Wrap so it finds Python and all dependencies
-    wrapProgram $out/bin/devops-info-service \
+    # Wrap python3 so it runs our app with all deps available
+    makeWrapper ${pkgs.python3}/bin/python3 $out/bin/devops-info-service \
+      --add-flags "$out/share/app.py" \
       --prefix PYTHONPATH : "$PYTHONPATH"
+
+    cp app.py $out/share/app.py
   '';
 
   # No tests in this simple setup, skip check phase
