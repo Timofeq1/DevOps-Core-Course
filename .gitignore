@@ -34,3 +34,7 @@ ansible/inventory/*.pyc
 
 # Monitoring
 monitoring/.env
+labs/lab18/app_go/result
+labs/lab18/app_python/os
+labs/lab18/app_python/result
+labs/lab18/app_python/data/visits
