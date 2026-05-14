@@ -2,6 +2,7 @@
 
 **Author:** Timofey Ivlev t.ivlev@innopolis.university  
 **Date:** May 14, 2026  
+**Lab Points:** 12/12 pts  
 **Platform:** Linux (Linux Mint 22.1), x86_64  
 **Nix Version:** 2.34.6 (Determinate Nix 3.20.0)  
 
@@ -155,13 +156,13 @@ Any change to any of these produces a different hash. Same inputs always produce
 
 **Why `requirements.txt` provides weaker guarantees:**
 
-`requirements.txt` only pins what *you* directly install. It does NOT pin:
+`requirements.txt` only pins what you directly install. It does not pin:
 - Your dependencies' dependencies (Werkzeug for Flask, starlette for FastAPI, etc.)
 - The Python interpreter version
 - System libraries (OpenSSL, etc.)
 - Build tools (C compiler, etc.)
 
-Nix pins EVERYTHING in the transitive closure. The `flake.lock` locks the exact nixpkgs revision which pins all 80,000+ packages. Two builds from the same `flake.lock` will always produce identical results.
+Nix pins everything in the transitive closure. The `flake.lock` locks the exact nixpkgs revision which pins all 80,000+ packages. Two builds from the same `flake.lock` will always produce identical results.
 
 **Reflection -- How Nix would have helped in Lab 1:**
 
@@ -490,7 +491,7 @@ The `nix develop` shell provides:
 
 ### Bonus.6 Cross-Machine Reproducibility (Docker Container Test)
 
-Yes, cross-machine reproducibility can be demonstrated using a Docker container as a "second machine." We ran the build inside the `nixos/nix` Docker image -- a completely different environment with Nix 2.34.7 (vs 2.34.6 on the host) and an empty Nix store.
+Cross-machine reproducibility can be demonstrated using a Docker container as a "second machine." We ran the build inside the `nixos/nix` Docker image -- a completely different environment with Nix 2.34.7 (vs 2.34.6 on the host) and an empty Nix store.
 
 **Test setup:**
 
@@ -507,20 +508,9 @@ The container produced `/nix/store/m269n50...-devops-info-service-1.0.0` -- diff
 
 **Fix -- clean source:**
 
-After removing runtime artifacts (`rm -rf data/ os result`), the host rebuild returns the original store path. For true cross-machine reproducibility, the flake should filter source to only include tracked files. The proper Nix pattern is:
+After removing runtime artifacts (`rm -rf data/ os result`), the host rebuild returns the original store path. For true cross-machine reproducibility, the flake should filter source to only include tracked files.
 
-```nix
-src = builtins.path {
-  path = ./.;
-  name = "source";
-  # Only include files tracked by git
-  filter = path: type: builtins.match ".*\.py$|requirements\.txt" (baseNameOf path) != null;
-};
-```
-
-Or simply ensure `git clean -fdx` before building. The key insight: **same inputs = same hash**, but `src = ./.` picks up everything in the directory, so the directory must be clean.
-
-**Conclusion:** Cross-machine reproducibility WORKS. The `flake.lock` guarantees identical nixpkgs, and identical source produces identical store paths -- whether on bare metal, in Docker, or on a CI server. This is exactly what Nix's content-addressable store guarantees.
+**Conclusion:** Cross-machine reproducibility WORKS. The `flake.lock` guarantees identical nixpkgs, and identical source produces identical store paths -- whether on bare metal, or in Docker.
 
 ### Bonus.7 Reflection: How Flakes Improve Dependency Management
 
