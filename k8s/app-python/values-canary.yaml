@@ -1,0 +1,25 @@
+# Canary deployment values for app-python (explicit)
+replicaCount: 3
+
+strategy:
+  type: canary
+  canary:
+    steps:
+      - setWeight: 20
+      - pause: {}  # Manual promotion
+      - setWeight: 40
+      - pause:
+          duration: 30s
+      - setWeight: 60
+      - pause:
+          duration: 30s
+      - setWeight: 80
+      - pause:
+          duration: 30s
+      - setWeight: 100
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000
+  nodePort: 30084
